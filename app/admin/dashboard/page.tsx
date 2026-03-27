@@ -22,11 +22,9 @@ export default function AdminDashboard() {
   // Add bank form
   const [showAddBank, setShowAddBank] = useState(false)
   const [nbName, setNbName] = useState('')
-  const [nbLoc,  setNbLoc]  = useState('')
 
   // Edit bank
   const [ebName, setEbName] = useState('')
-  const [ebLoc,  setEbLoc]  = useState('')
 
   // Set password
   const [pwBankId,  setPwBankId]  = useState<number | null>(null)
@@ -99,7 +97,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const bank = banks.find(b => b.id === activeBankId)
-    if (bank) { setEbName(bank.name); setEbLoc(bank.location) }
+    if (bank) { setEbName(bank.name) }
   }, [activeBankId, banks])
 
   const showToast = (msg: string) => {
@@ -117,8 +115,8 @@ export default function AdminDashboard() {
 
   function handleAddBank() {
     if (!nbName.trim()) return
-    addBank(nbName.trim(), nbLoc.trim() || 'Nearby')
-    setNbName(''); setNbLoc(''); setShowAddBank(false)
+    addBank(nbName.trim(), 'Nearby')
+    setNbName(''); setShowAddBank(false)
     showToast(`${nbName.trim()} added`)
   }
 
@@ -133,7 +131,7 @@ export default function AdminDashboard() {
 
   function handleSaveBank() {
     if (!activeBankId || !ebName.trim()) return
-    updateBank(activeBankId, ebName.trim(), ebLoc.trim() || 'Nearby')
+    updateBank(activeBankId, ebName.trim(), activeBank?.location || 'Nearby')
     showToast('Saved')
   }
 
@@ -363,12 +361,8 @@ export default function AdminDashboard() {
                   placeholder="Bank name" autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleAddBank()}
                   style={{ ...fi, flex: 2, minWidth: 160 }} />
-                <input value={nbLoc} onChange={e => setNbLoc(e.target.value)}
-                  placeholder="Area (e.g. Downtown)"
-                  onKeyDown={e => e.key === 'Enter' && handleAddBank()}
-                  style={{ ...fi, flex: 1, minWidth: 130 }} />
                 <button onClick={handleAddBank} style={btnPrimary}>Add</button>
-                <button onClick={() => { setShowAddBank(false); setNbName(''); setNbLoc('') }} style={btnGhost}>Cancel</button>
+                <button onClick={() => { setShowAddBank(false); setNbName('') }} style={btnGhost}>Cancel</button>
               </div>
             </div>
           )}
@@ -382,8 +376,6 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: isSuper ? 8 : 0 }}>
                 <input value={ebName} onChange={e => setEbName(e.target.value)}
                   placeholder="Bank name" style={{ ...fi, flex: 2, minWidth: 140 }} />
-                <input value={ebLoc} onChange={e => setEbLoc(e.target.value)}
-                  placeholder="Location" style={{ ...fi, flex: 1, minWidth: 100 }} />
                 <button onClick={handleSaveBank} style={btnPrimary}>Save</button>
                 <button onClick={() => handleCopyShareLink(activeBank.id)} style={btnOutline}>Copy link</button>
                 {isSuper && (
