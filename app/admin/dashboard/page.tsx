@@ -328,7 +328,6 @@ export default function AdminDashboard() {
           padding: '3px 9px', borderRadius: 999,
         }}>Admin</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/" style={{ fontSize: 13, color: '#888', textDecoration: 'underline' }}>&larr; User view</a>
           <button onClick={handleLogout} style={btnGhost}>Sign out</button>
         </div>
       </header>
