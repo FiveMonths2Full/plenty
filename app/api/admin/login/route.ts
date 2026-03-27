@@ -32,26 +32,29 @@ export async function POST(request: Request) {
   let role: 'bank' | 'super' = 'super'
   let authenticatedBankId: number | null = null
 
-  // Try bank-specific auth if bankId is provided
   if (bankId) {
+    // Bank admin login — only check bank password, never fall through to super
     try {
       const { sql } = await import('@vercel/postgres')
       const bcrypt = await import('bcryptjs')
       const { rows } = await sql`SELECT admin_password_hash FROM banks WHERE id = ${bankId}`
-      if (rows.length > 0 && rows[0].admin_password_hash) {
-        const match = await bcrypt.compare(password, rows[0].admin_password_hash)
-        if (match) {
-          role = 'bank'
-          authenticatedBankId = bankId
-        }
+      if (!rows.length) {
+        return NextResponse.json({ error: 'Bank not found.' }, { status: 401 })
       }
+      if (!rows[0].admin_password_hash) {
+        return NextResponse.json({ error: 'No password set for this bank yet. Ask your super admin.' }, { status: 401 })
+      }
+      const match = await bcrypt.compare(password, rows[0].admin_password_hash)
+      if (!match) {
+        return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 })
+      }
+      role = 'bank'
+      authenticatedBankId = bankId
     } catch {
-      // DB not ready, fall through to super admin check
+      return NextResponse.json({ error: 'Database error. Try again.' }, { status: 500 })
     }
-  }
-
-  // If not authenticated as bank, check super admin password
-  if (!authenticatedBankId) {
+  } else {
+    // Super admin login
     const superPassword = process.env.ADMIN_PASSWORD
     if (!superPassword || password !== superPassword) {
       return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 })
