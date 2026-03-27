@@ -68,7 +68,7 @@ export async function POST(request: Request) {
   const isProduction = process.env.NODE_ENV === 'production'
 
   const response = NextResponse.json({ ok: true, role })
-  response.cookies.set('plenty_session', sessionData, {
+  response.cookies.set('plenti_session', sessionData, {
     path: '/',
     sameSite: 'lax',
     httpOnly: true,

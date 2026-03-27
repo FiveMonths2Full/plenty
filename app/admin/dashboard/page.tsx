@@ -321,7 +321,7 @@ export default function AdminDashboard() {
         display: 'flex', alignItems: 'center', gap: 12,
         position: 'sticky', top: 0, background: '#fff', zIndex: 10,
       }}>
-        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, fontWeight: 400 }}>Plenty</span>
+        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, fontWeight: 400 }}>Plenti</span>
         <span style={{
           fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase',
           background: '#f5f5f3', border: '0.5px solid #e8e8e8', color: '#aaa',

@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 
 export async function GET() {
   const cookieStore = cookies()
-  const session = cookieStore.get('plenty_session')
+  const session = cookieStore.get('plenti_session')
 
   if (!session) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })

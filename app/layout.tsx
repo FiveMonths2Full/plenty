@@ -6,7 +6,7 @@ import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
 import Analytics from '@/components/Analytics'
 
 export const metadata: Metadata = {
-  title: 'Plenty — Give what\'s actually needed',
+  title: 'Plenti — Give what\'s actually needed',
   description: 'See what your local food banks need before you shop.',
   manifest: '/manifest.json',
   icons: {
@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Plenty" />
+        <meta name="apple-mobile-web-app-title" content="Plenti" />
       </head>
       <body>
         <StoreProvider>

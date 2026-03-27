@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 export type AdminSession = { role: 'super' | 'bank'; bankId: number | null }
 
 export function getAdminSession(): AdminSession | null {
-  const s = cookies().get('plenty_session')
+  const s = cookies().get('plenti_session')
   if (!s) return null
   try {
     return JSON.parse(s.value) as AdminSession

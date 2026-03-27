@@ -1,6 +1,6 @@
 {
-  "name": "Plenty",
-  "short_name": "Plenty",
+  "name": "Plenti",
+  "short_name": "Plenti",
   "description": "Give what your local food bank actually needs.",
   "start_url": "/",
   "display": "standalone",

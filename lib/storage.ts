@@ -2,12 +2,12 @@
 import { Bank, SelectedMap, DonatedMap } from './types'
 
 const KEYS = {
-  selected:   'plenty_list_v2',
-  donated:    'plenty_done_v2',
-  activeBank: 'plenty_active_bank',
+  selected:   'plenti_list_v2',
+  donated:    'plenti_done_v2',
+  activeBank: 'plenti_active_bank',
 }
 
-const CACHE_KEY = 'plenty_banks_cache'
+const CACHE_KEY = 'plenti_banks_cache'
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback

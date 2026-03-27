@@ -118,7 +118,7 @@ export default function AdminLogin() {
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
         <a href="/" style={{ fontSize: 13, color: '#888', textDecoration: 'underline' }}>
-          &larr; Back to Plenty
+          &larr; Back to Plenti
         </a>
       </div>
     </main>

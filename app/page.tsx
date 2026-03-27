@@ -49,7 +49,7 @@ export default function Home() {
         background: '#fff', zIndex: 10,
       }}>
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, letterSpacing: -0.5, marginBottom: 2 }}>
-          Plenty
+          Plenti
         </h1>
         <p style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>Give what's actually needed.</p>
         <p style={{ fontSize: 12, color: '#bbb', marginBottom: 0 }}>See what your local food bank is short on before your next grocery run.</p>

@@ -2,7 +2,7 @@
 // Strategy: Network-first with cache fallback for navigation requests,
 // Cache-first for static assets.
 
-const CACHE_NAME = 'plenty-v1'
+const CACHE_NAME = 'plenti-v1'
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
