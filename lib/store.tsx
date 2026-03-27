@@ -48,10 +48,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [donated,    setDonated]    = useState<DonatedMap>({})
   const [nextItemId, setNextItemId] = useState(300)
   const activeBankIdRef = useRef(activeBankId)
+  const banksRef = useRef(banks)
 
   useEffect(() => {
     activeBankIdRef.current = activeBankId
   }, [activeBankId])
+
+  useEffect(() => {
+    banksRef.current = banks
+  }, [banks])
 
   useEffect(() => {
     // 1. Load cache immediately
@@ -107,9 +112,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setSelected(prev => {
       const key = String(activeBankIdRef.current)
       const cur = { ...(prev[key] || {}) }
+      const itemName = banksRef.current.find(b => b.id === activeBankIdRef.current)?.items.find(i => i.id === itemId)?.name
       if (cur[itemId]) {
         delete cur[itemId]
-        trackEvent('item_deselected', { item_id: itemId, bank_id: activeBankIdRef.current })
+        trackEvent('item_deselected', { item_id: itemId, item_name: itemName, bank_id: activeBankIdRef.current })
         setDonated(d => {
           const nd = { ...d, [key]: { ...(d[key] || {}) } }
           delete nd[key][itemId]
@@ -118,7 +124,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         })
       } else {
         cur[itemId] = 1
-        trackEvent('item_selected', { item_id: itemId, bank_id: activeBankIdRef.current })
+        trackEvent('item_selected', { item_id: itemId, item_name: itemName, bank_id: activeBankIdRef.current })
       }
       const next = { ...prev, [key]: cur }
       saveSelected(next)
