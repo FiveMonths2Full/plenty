@@ -2,6 +2,7 @@
 // app/page.tsx
 import { useState, useEffect, useCallback } from 'react'
 import { useStore } from '@/lib/store'
+import { trackEvent } from '@/lib/analytics'
 import BankSelector from '@/components/BankSelector'
 import NeedsView from '@/components/NeedsView'
 import MyListView from '@/components/MyListView'
@@ -35,6 +36,7 @@ export default function Home() {
     const url = `${window.location.origin}/?bank=${activeBankId}`
     navigator.clipboard?.writeText(url).catch(() => {})
     showToast('Share link copied to clipboard')
+    trackEvent('share_tapped', { bank_id: activeBankId })
   }, [activeBankId, showToast])
 
   return (
@@ -84,7 +86,7 @@ export default function Home() {
         <TabBtn
           label={selCount > 0 ? `My list (${selCount})` : 'My list'}
           active={tab === 'list'}
-          onClick={() => setTab('list')}
+          onClick={() => { setTab('list'); trackEvent('list_tab_opened', { item_count: selCount }) }}
         />
       </nav>
 

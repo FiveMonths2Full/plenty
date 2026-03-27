@@ -1,6 +1,7 @@
 'use client'
 // components/BankSelector.tsx
 import { useStore } from '@/lib/store'
+import { trackEvent } from '@/lib/analytics'
 
 export default function BankSelector() {
   const { banks, activeBankId, setActiveBankId } = useStore()
@@ -9,7 +10,12 @@ export default function BankSelector() {
     <div style={{ position: 'relative', marginTop: 10 }}>
       <select
         value={activeBankId}
-        onChange={e => setActiveBankId(Number(e.target.value))}
+        onChange={e => {
+          const id = Number(e.target.value)
+          setActiveBankId(id)
+          const bank = banks.find(b => b.id === id)
+          trackEvent('bank_viewed', { bank_id: id, bank_name: bank?.name })
+        }}
         style={{
           width: '100%', appearance: 'none',
           fontFamily: 'inherit', fontSize: 13, fontWeight: 500,

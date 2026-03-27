@@ -2,11 +2,23 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { StoreProvider } from '@/lib/store'
+import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar'
+import Analytics from '@/components/Analytics'
 
 export const metadata: Metadata = {
   title: 'Plenty — Give what\'s actually needed',
   description: 'See what your local food banks need before you shop.',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 }
 
 export const viewport: Viewport = {
@@ -30,6 +42,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StoreProvider>
           {children}
         </StoreProvider>
+        <ServiceWorkerRegistrar />
+        <Analytics />
       </body>
     </html>
   )

@@ -1,7 +1,9 @@
 'use client'
 // components/MyListView.tsx
+import { useEffect, useRef } from 'react'
 import { useStore } from '@/lib/store'
 import { CheckCircle, EmptyState } from './ui'
+import { trackEvent } from '@/lib/analytics'
 
 interface Props {
   onShare: () => void
@@ -16,6 +18,14 @@ export default function MyListView({ onShare }: Props) {
 
   const selectedItems = (bank?.items || []).filter(i => sel[i.id])
   const allDonated = selectedItems.length > 0 && selectedItems.every(i => don[i.id])
+
+  const prevAllDonated = useRef(false)
+  useEffect(() => {
+    if (allDonated && !prevAllDonated.current) {
+      trackEvent('donation_completed', { bank_id: activeBankId, item_count: selectedItems.length })
+    }
+    prevAllDonated.current = allDonated
+  }, [allDonated, activeBankId, selectedItems.length])
 
   if (selectedItems.length === 0) {
     return (

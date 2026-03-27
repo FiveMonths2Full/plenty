@@ -1,21 +1,50 @@
 'use client'
 // app/admin/page.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Bank } from '@/lib/types'
 
 export default function AdminLogin() {
   const [pw, setPw] = useState('')
-  const [error, setError] = useState(false)
+  const [error, setError] = useState('')
+  const [banks, setBanks] = useState<Bank[]>([])
+  const [selectedBankId, setSelectedBankId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  function handleLogin() {
-    const adminPw = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'plenty2024'
-    if (pw === adminPw) {
-      sessionStorage.setItem('plenty_admin', '1')
-      router.push('/admin/dashboard')
-    } else {
-      setError(true)
-      setPw('')
+  useEffect(() => {
+    fetch('/api/banks')
+      .then(r => r.json())
+      .then((data: Bank[]) => setBanks(data))
+      .catch(() => {})
+  }, [])
+
+  async function handleLogin() {
+    if (!pw.trim()) return
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          password: pw,
+          bankId: selectedBankId || undefined,
+        }),
+      })
+      if (res.ok) {
+        router.push('/admin/dashboard')
+      } else if (res.status === 429) {
+        setError('Too many attempts. Try again later.')
+        setPw('')
+      } else {
+        setError('Incorrect password. Try again.')
+        setPw('')
+      }
+    } catch {
+      setError('Connection error. Try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -32,10 +61,27 @@ export default function AdminLogin() {
           Enter your password to manage food bank data.
         </p>
 
+        <select
+          value={selectedBankId ?? ''}
+          onChange={e => setSelectedBankId(e.target.value ? Number(e.target.value) : null)}
+          style={{
+            width: '100%', fontSize: 14, padding: '10px 12px',
+            border: '0.5px solid #ddd',
+            borderRadius: 10, outline: 'none', marginBottom: 10,
+            background: '#fff', color: '#111',
+            fontFamily: 'inherit',
+          }}
+        >
+          <option value="">Sign in as super admin...</option>
+          {banks.map(b => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+
         <input
           type="password"
           value={pw}
-          onChange={e => { setPw(e.target.value); setError(false) }}
+          onChange={e => { setPw(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
           placeholder="Password"
           autoFocus
@@ -49,27 +95,29 @@ export default function AdminLogin() {
 
         {error && (
           <p style={{ fontSize: 13, color: '#993C1D', marginBottom: 10 }}>
-            Incorrect password. Try again.
+            {error}
           </p>
         )}
 
         <button
           onClick={handleLogin}
+          disabled={loading}
           style={{
             width: '100%', padding: 11,
             background: '#27500A', color: '#fff',
             border: 'none', borderRadius: 10,
             fontSize: 14, fontWeight: 500,
-            cursor: 'pointer',
+            cursor: loading ? 'wait' : 'pointer',
+            opacity: loading ? 0.7 : 1,
           }}
         >
-          Sign in
+          {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </div>
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
         <a href="/" style={{ fontSize: 13, color: '#888', textDecoration: 'underline' }}>
-          ← Back to Plenty
+          &larr; Back to Plenty
         </a>
       </div>
     </main>

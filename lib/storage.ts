@@ -1,12 +1,13 @@
 // lib/storage.ts
-import { Bank, SelectedMap, DonatedMap, DEFAULT_BANKS } from './types'
+import { Bank, SelectedMap, DonatedMap } from './types'
 
 const KEYS = {
-  banks:      'plenty_banks_v2',
   selected:   'plenty_list_v2',
   donated:    'plenty_done_v2',
   activeBank: 'plenty_active_bank',
 }
+
+const CACHE_KEY = 'plenty_banks_cache'
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
@@ -21,14 +22,6 @@ function read<T>(key: string, fallback: T): T {
 function write(key: string, value: unknown) {
   if (typeof window === 'undefined') return
   try { localStorage.setItem(key, JSON.stringify(value)) } catch {}
-}
-
-export function loadBanks(): Bank[] {
-  return read<Bank[]>(KEYS.banks, JSON.parse(JSON.stringify(DEFAULT_BANKS)))
-}
-
-export function saveBanks(banks: Bank[]) {
-  write(KEYS.banks, banks)
 }
 
 export function loadSelected(): SelectedMap {
@@ -55,4 +48,12 @@ export function loadActiveBank(banks: Bank[]): number {
 
 export function saveActiveBank(id: number) {
   write(KEYS.activeBank, id)
+}
+
+export function loadBanksCache(): Bank[] | null {
+  return read<Bank[] | null>(CACHE_KEY, null)
+}
+
+export function saveBanksCache(banks: Bank[]): void {
+  write(CACHE_KEY, banks)
 }

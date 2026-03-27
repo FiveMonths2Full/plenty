@@ -1,0 +1,76 @@
+import { NextResponse } from 'next/server'
+
+// In-memory rate limiting
+const attempts = new Map<string, { count: number; resetAt: number }>()
+
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+
+export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown'
+  const now = Date.now()
+
+  // Rate limiting
+  const entry = attempts.get(ip)
+  if (entry) {
+    if (now > entry.resetAt) {
+      attempts.set(ip, { count: 1, resetAt: now + WINDOW_MS })
+    } else if (entry.count >= MAX_ATTEMPTS) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Try again later.' },
+        { status: 429 }
+      )
+    } else {
+      entry.count++
+    }
+  } else {
+    attempts.set(ip, { count: 1, resetAt: now + WINDOW_MS })
+  }
+
+  const { password, bankId } = await request.json() as { password: string; bankId?: number }
+
+  let role: 'bank' | 'super' = 'super'
+  let authenticatedBankId: number | null = null
+
+  // Try bank-specific auth if bankId is provided
+  if (bankId) {
+    try {
+      const { sql } = await import('@vercel/postgres')
+      const bcrypt = await import('bcryptjs')
+      const { rows } = await sql`SELECT admin_password_hash FROM banks WHERE id = ${bankId}`
+      if (rows.length > 0 && rows[0].admin_password_hash) {
+        const match = await bcrypt.compare(password, rows[0].admin_password_hash)
+        if (match) {
+          role = 'bank'
+          authenticatedBankId = bankId
+        }
+      }
+    } catch {
+      // DB not ready, fall through to super admin check
+    }
+  }
+
+  // If not authenticated as bank, check super admin password
+  if (!authenticatedBankId) {
+    const superPassword = process.env.ADMIN_PASSWORD
+    if (!superPassword || password !== superPassword) {
+      return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 })
+    }
+    role = 'super'
+    authenticatedBankId = null
+  }
+
+  // Set HttpOnly cookie
+  const sessionData = JSON.stringify({ role, bankId: authenticatedBankId })
+  const isProduction = process.env.NODE_ENV === 'production'
+
+  const response = NextResponse.json({ ok: true })
+  response.cookies.set('plenty_session', sessionData, {
+    path: '/',
+    sameSite: 'lax',
+    httpOnly: true,
+    secure: isProduction,
+  })
+
+  return response
+}

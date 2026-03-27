@@ -6,6 +6,11 @@ import { useStore } from '@/lib/store'
 import { Item } from '@/lib/types'
 import { EmptyState, Toast } from '@/components/ui'
 
+interface SessionInfo {
+  role: 'super' | 'bank'
+  bankId: number | null
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
   const {
@@ -15,6 +20,7 @@ export default function AdminDashboard() {
 
   const [activeBankId, setActiveBankId] = useState<number | null>(null)
   const [toast, setToast] = useState({ visible: false, message: '' })
+  const [session, setSession] = useState<SessionInfo | null>(null)
 
   // New item form state
   const [niName,     setNiName]     = useState('')
@@ -26,17 +32,27 @@ export default function AdminDashboard() {
   const [ebName, setEbName] = useState('')
   const [ebLoc,  setEbLoc]  = useState('')
 
+  // Fetch session on mount
   useEffect(() => {
-    if (typeof window !== 'undefined' && !sessionStorage.getItem('plenty_admin')) {
-      router.replace('/admin')
-    }
+    fetch('/api/admin/session')
+      .then(r => {
+        if (!r.ok) throw new Error('Not authenticated')
+        return r.json()
+      })
+      .then((data: SessionInfo) => setSession(data))
+      .catch(() => router.replace('/admin'))
   }, [router])
 
+  // Filter banks for bank-role admins
+  const visibleBanks = session?.role === 'bank' && session.bankId
+    ? banks.filter(b => b.id === session.bankId)
+    : banks
+
   useEffect(() => {
-    if (!activeBankId && banks.length > 0) {
-      setActiveBankId(banks[0].id)
+    if (!activeBankId && visibleBanks.length > 0) {
+      setActiveBankId(visibleBanks[0].id)
     }
-  }, [banks, activeBankId])
+  }, [visibleBanks, activeBankId])
 
   useEffect(() => {
     const bank = banks.find(b => b.id === activeBankId)
@@ -49,6 +65,12 @@ export default function AdminDashboard() {
   }
 
   const activeBank = banks.find(b => b.id === activeBankId)
+  const isSuper = session?.role === 'super'
+
+  async function handleLogout() {
+    await fetch('/api/admin/logout', { method: 'POST' })
+    router.push('/admin')
+  }
 
   function handleAddBank() {
     const name = prompt('Food bank name:')?.trim()
@@ -61,7 +83,7 @@ export default function AdminDashboard() {
   function handleDeleteBank(id: number) {
     if (banks.length <= 1) { alert('You must keep at least one food bank.'); return }
     if (!confirm('Delete this food bank and all its items?')) return
-    const fallback = banks.find(b => b.id !== id)
+    const fallback = visibleBanks.find(b => b.id !== id)
     deleteBank(id)
     setActiveBankId(fallback?.id ?? null)
     showToast('Food bank deleted')
@@ -110,9 +132,9 @@ export default function AdminDashboard() {
           padding: '3px 9px', borderRadius: 999,
         }}>Admin</span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/" style={{ fontSize: 13, color: '#888', textDecoration: 'underline' }}>← User view</a>
+          <a href="/" style={{ fontSize: 13, color: '#888', textDecoration: 'underline' }}>&larr; User view</a>
           <button
-            onClick={() => { sessionStorage.removeItem('plenty_admin'); router.push('/admin') }}
+            onClick={handleLogout}
             style={{ fontSize: 13, color: '#888', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer' }}
           >
             Sign out
@@ -122,11 +144,11 @@ export default function AdminDashboard() {
 
       <div style={{ padding: 20 }}>
 
-        {/* ── Food banks ── */}
+        {/* -- Food banks -- */}
         <section style={{ marginBottom: 28 }}>
           <div style={sectionHead}>Food banks</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-            {banks.map(b => (
+            {visibleBanks.map(b => (
               <button
                 key={b.id}
                 onClick={() => setActiveBankId(b.id)}
@@ -142,13 +164,15 @@ export default function AdminDashboard() {
                 {b.name}
               </button>
             ))}
-            <button onClick={handleAddBank} style={{
-              padding: '7px 14px', borderRadius: 999,
-              border: '0.5px dashed #ccc', background: 'transparent',
-              fontSize: 13, color: '#aaa', cursor: 'pointer',
-            }}>
-              + Add bank
-            </button>
+            {isSuper && (
+              <button onClick={handleAddBank} style={{
+                padding: '7px 14px', borderRadius: 999,
+                border: '0.5px dashed #ccc', background: 'transparent',
+                fontSize: 13, color: '#aaa', cursor: 'pointer',
+              }}>
+                + Add bank
+              </button>
+            )}
           </div>
 
           {/* Edit selected bank */}
@@ -161,23 +185,25 @@ export default function AdminDashboard() {
                   placeholder="Location" style={{ ...fi, flex: 1, minWidth: 100 }} />
                 <button onClick={handleSaveBank} style={btnPrimary}>Save</button>
                 <button onClick={() => handleCopyShareLink(activeBank.id)} style={btnOutline}>Copy share link</button>
-                <button onClick={() => handleDeleteBank(activeBank.id)} style={btnDanger}>Delete bank</button>
+                {isSuper && (
+                  <button onClick={() => handleDeleteBank(activeBank.id)} style={btnDanger}>Delete bank</button>
+                )}
               </div>
             </div>
           )}
         </section>
 
-        {/* ── Items ── */}
+        {/* -- Items -- */}
         <section>
           <div style={sectionHead}>
             Items
             {activeBank && <span style={{ fontWeight: 400, fontStyle: 'italic', textTransform: 'none', letterSpacing: 0, marginLeft: 6, color: '#aaa' }}>
-              — {activeBank.name}
+              &mdash; {activeBank.name}
             </span>}
           </div>
 
           {sortedItems.length === 0 ? (
-            <EmptyState icon="📋" label="No items yet" sub="Add items below to show donors what's needed." />
+            <EmptyState icon="&#x1f4cb;" label="No items yet" sub="Add items below to show donors what's needed." />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
               {sortedItems.map(item => (
@@ -190,7 +216,7 @@ export default function AdminDashboard() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</div>
                     <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>
-                      {item.detail}{item.qty ? ` · ${item.qty} needed` : ''}
+                      {item.detail}{item.qty ? ` \u00B7 ${item.qty} needed` : ''}
                     </div>
                   </div>
                   <select
@@ -244,7 +270,7 @@ export default function AdminDashboard() {
   )
 }
 
-// ── Styles ───────────────────────────────────────────────────
+// -- Styles --
 const sectionHead: React.CSSProperties = {
   fontSize: 11, fontWeight: 500, letterSpacing: '0.08em',
   textTransform: 'uppercase', color: '#aaa', marginBottom: 10,
