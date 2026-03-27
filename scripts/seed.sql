@@ -17,9 +17,9 @@ ALTER TABLE banks ADD COLUMN IF NOT EXISTS admin_password_hash TEXT;
 
 -- Seed banks
 INSERT INTO banks (id, name, location) VALUES
-  (1, 'Blacksburg Community Pantry', '0.4 mi'),
-  (2, 'Christiansburg Food Bank', '3.1 mi'),
-  (3, 'NRV Community Kitchen', '5.8 mi')
+  (1, 'Blacksburg Community Pantry', 'Downtown Blacksburg'),
+  (2, 'Christiansburg Food Bank', 'Christiansburg'),
+  (3, 'NRV Community Kitchen', 'NRV Region')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed items

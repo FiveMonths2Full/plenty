@@ -219,7 +219,7 @@ export default function AdminDashboard() {
                   onKeyDown={e => e.key === 'Enter' && handleAddBank()}
                   style={{ ...fi, flex: 2, minWidth: 160 }} />
                 <input value={nbLoc} onChange={e => setNbLoc(e.target.value)}
-                  placeholder="Location (e.g. 1.2 mi)"
+                  placeholder="Area (e.g. Downtown)"
                   onKeyDown={e => e.key === 'Enter' && handleAddBank()}
                   style={{ ...fi, flex: 1, minWidth: 130 }} />
                 <button onClick={handleAddBank} style={btnPrimary}>Add</button>

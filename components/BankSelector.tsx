@@ -26,7 +26,7 @@ export default function BankSelector() {
       >
         {banks.map(b => (
           <option key={b.id} value={b.id}>
-            {b.name} · {b.location}
+            {b.name}
           </option>
         ))}
       </select>

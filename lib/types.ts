@@ -25,7 +25,7 @@ export const DEFAULT_BANKS: Bank[] = [
   {
     id: 1,
     name: 'Blacksburg Community Pantry',
-    location: '0.4 mi',
+    location: 'Downtown Blacksburg',
     items: [
       { id: 1,  name: 'Peanut butter',  detail: 'Any size',                  priority: 'high',   qty: 10 },
       { id: 2,  name: 'Canned beans',   detail: 'Black, kidney, or pinto',   priority: 'high',   qty: 20 },
@@ -38,7 +38,7 @@ export const DEFAULT_BANKS: Bank[] = [
   {
     id: 2,
     name: 'Christiansburg Food Bank',
-    location: '3.1 mi',
+    location: 'Christiansburg',
     items: [
       { id: 7,  name: 'Canned soup',   detail: 'Any variety',              priority: 'high',   qty: 18 },
       { id: 8,  name: 'Mac & cheese',  detail: 'Any brand',                priority: 'high',   qty: 14 },
@@ -50,7 +50,7 @@ export const DEFAULT_BANKS: Bank[] = [
   {
     id: 3,
     name: 'NRV Community Kitchen',
-    location: '5.8 mi',
+    location: 'NRV Region',
     items: [
       { id: 12, name: 'Dried lentils',    detail: 'Any color',    priority: 'high',   qty: 11 },
       { id: 13, name: 'Canned tomatoes',  detail: 'Diced or whole', priority: 'medium', qty: 8  },
