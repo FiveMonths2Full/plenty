@@ -403,40 +403,30 @@ export default function AdminDashboard() {
 
         {/* ── Food banks ── */}
         <section style={{ marginBottom: 28 }}>
-          {/* Bank tabs — mobile only (sidebar handles bank switching on desktop) */}
-          {!isDesktop && (
-            <>
-              <div style={sectionHead}>Food banks</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                {visibleBanks.map(b => (
-                  <button key={b.id} onClick={() => { setActiveBankId(b.id); setEditingItemId(null) }} style={{
-                    padding: '7px 14px', borderRadius: 999,
-                    border: `0.5px solid ${b.id === activeBankId ? '#111' : '#ddd'}`,
-                    background: b.id === activeBankId ? '#111' : 'transparent',
-                    color: b.id === activeBankId ? '#fff' : '#888',
-                    fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s',
-                  }}>{b.name}</button>
-                ))}
-                {isSuper && (
-                  <button onClick={() => setShowAddBank(v => !v)} style={{
-                    padding: '7px 14px', borderRadius: 999,
-                    border: `0.5px ${showAddBank ? 'solid #27500A' : 'dashed #ccc'}`,
-                    background: showAddBank ? '#EAF3DE' : 'transparent',
-                    fontSize: 13, color: showAddBank ? '#27500A' : '#aaa', cursor: 'pointer',
-                  }}>+ Add bank</button>
-                )}
-              </div>
-            </>
-          )}
-
-          {/* Add bank button — desktop (sidebar has bank list but not a prominent add button) */}
-          {isDesktop && isSuper && (
-            <div style={{ marginBottom: 12 }}>
+          {/* Section header row — always visible */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ ...sectionHead, marginBottom: 0 }}>Food banks</div>
+            {isSuper && (
               <button onClick={() => setShowAddBank(v => !v)} style={{
                 ...btnOutline,
                 border: `0.5px ${showAddBank ? 'solid #27500A' : 'dashed #ccc'}`,
                 color: showAddBank ? '#27500A' : '#888',
               }}>+ Add bank</button>
+            )}
+          </div>
+
+          {/* Bank tabs — mobile only (sidebar handles switching on desktop) */}
+          {!isDesktop && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+              {visibleBanks.map(b => (
+                <button key={b.id} onClick={() => { setActiveBankId(b.id); setEditingItemId(null) }} style={{
+                  padding: '7px 14px', borderRadius: 999,
+                  border: `0.5px solid ${b.id === activeBankId ? '#111' : '#ddd'}`,
+                  background: b.id === activeBankId ? '#111' : 'transparent',
+                  color: b.id === activeBankId ? '#fff' : '#888',
+                  fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.15s',
+                }}>{b.name}</button>
+              ))}
             </div>
           )}
 
