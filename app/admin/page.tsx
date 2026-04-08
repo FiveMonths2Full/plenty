@@ -34,7 +34,7 @@ export default function AdminLogin() {
       })
       if (res.ok) {
         const data = await res.json() as { ok: boolean; role: string }
-        router.push(data.role === 'bank' ? '/admin/bank-dashboard' : '/admin/dashboard')
+        window.location.href = data.role === 'bank' ? '/admin/bank-dashboard' : '/admin/dashboard'
       } else if (res.status === 429) {
         setError('Too many attempts. Try again later.')
         setPw('')

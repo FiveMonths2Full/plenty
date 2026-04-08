@@ -74,13 +74,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetch('/api/admin/session')
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then((d: SessionInfo) => {
-        if (d.role === 'bank') {
-          router.replace('/admin/bank-dashboard')
-        } else {
-          setSession(d)
-        }
-      })
+      .then((d: SessionInfo) => setSession(d))
       .catch(() => router.replace('/admin'))
   }, [router])
 
