@@ -12,6 +12,16 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  // If a session already exists (e.g. super admin pressed Back), redirect immediately
+  useEffect(() => {
+    fetch('/api/admin/session', { cache: 'no-store' })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then((d: { role: string }) => {
+        window.location.href = d.role === 'bank' ? '/admin/bank-dashboard' : '/admin/dashboard'
+      })
+      .catch(() => {}) // No session — stay on login page
+  }, [])
+
   useEffect(() => {
     fetch('/api/banks')
       .then(r => r.json())
