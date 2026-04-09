@@ -1,25 +1,20 @@
 import { NextResponse } from 'next/server'
-
-// In-memory rate limiting
-const attempts = new Map<string, { count: number; resetAt: number }>()
+import { sql } from '@/lib/db'
 
 const MAX_ATTEMPTS = 20
-const WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+const WINDOW_MS = 15 * 60 * 1000
+const attempts = new Map<string, { count: number; resetAt: number }>()
 
 export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown'
   const now = Date.now()
 
-  // Rate limiting
   const entry = attempts.get(ip)
   if (entry) {
     if (now > entry.resetAt) {
       attempts.set(ip, { count: 1, resetAt: now + WINDOW_MS })
     } else if (entry.count >= MAX_ATTEMPTS) {
-      return NextResponse.json(
-        { error: 'Too many attempts. Try again later.' },
-        { status: 429 }
-      )
+      return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 })
     } else {
       entry.count++
     }
@@ -27,47 +22,57 @@ export async function POST(request: Request) {
     attempts.set(ip, { count: 1, resetAt: now + WINDOW_MS })
   }
 
-  const { password, bankId } = await request.json() as { password: string; bankId?: number }
+  const body = await request.json() as { username?: string; password?: string }
+  const username = body.username?.trim() ?? ''
+  const password = body.password ?? ''
+
+  if (!username || !password) {
+    return NextResponse.json({ error: 'Username and password are required.' }, { status: 400 })
+  }
 
   let role: 'bank' | 'super' = 'super'
   let authenticatedBankId: number | null = null
 
-  if (bankId) {
-    // Bank admin login — only check bank password, never fall through to super
+  const superUsername = (process.env.ADMIN_USERNAME || 'admin').toLowerCase()
+  const superPassword = process.env.ADMIN_PASSWORD
+
+  if (username.toLowerCase() === superUsername) {
+    // ── Super admin ──
+    if (!superPassword || password !== superPassword) {
+      return NextResponse.json({ error: 'Incorrect credentials.' }, { status: 401 })
+    }
+    role = 'super'
+  } else {
+    // ── Bank admin — look up by username ──
     try {
-      const { sql } = await import('@vercel/postgres')
       const bcrypt = await import('bcryptjs')
-      const { rows } = await sql`SELECT admin_password_hash FROM banks WHERE id = ${bankId}`
+      const { rows } = await sql`
+        SELECT id, admin_password_hash
+        FROM banks
+        WHERE LOWER(admin_username) = LOWER(${username})
+        LIMIT 1
+      `
       if (!rows.length) {
-        return NextResponse.json({ error: 'Bank not found.' }, { status: 401 })
+        return NextResponse.json({ error: 'Incorrect credentials.' }, { status: 401 })
       }
       if (!rows[0].admin_password_hash) {
-        return NextResponse.json({ error: 'No password set for this bank yet. Ask your super admin.' }, { status: 401 })
+        return NextResponse.json({ error: 'No credentials set for this account. Contact your super admin.' }, { status: 401 })
       }
       const match = await bcrypt.compare(password, rows[0].admin_password_hash)
       if (!match) {
-        return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 })
+        return NextResponse.json({ error: 'Incorrect credentials.' }, { status: 401 })
       }
       role = 'bank'
-      authenticatedBankId = bankId
+      authenticatedBankId = rows[0].id
     } catch {
       return NextResponse.json({ error: 'Database error. Try again.' }, { status: 500 })
     }
-  } else {
-    // Super admin login
-    const superPassword = process.env.ADMIN_PASSWORD
-    if (!superPassword || password !== superPassword) {
-      return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 })
-    }
-    role = 'super'
-    authenticatedBankId = null
   }
 
-  // Set HttpOnly cookie
   const sessionData = JSON.stringify({ role, bankId: authenticatedBankId })
   const isProduction = process.env.NODE_ENV === 'production'
-
   const redirectTo = role === 'bank' ? '/admin/bank-dashboard' : '/admin/dashboard'
+
   const response = NextResponse.json({ ok: true, role, redirectTo })
   response.cookies.set('plenti_session', sessionData, {
     path: '/',
@@ -75,6 +80,5 @@ export async function POST(request: Request) {
     httpOnly: true,
     secure: isProduction,
   })
-
   return response
 }

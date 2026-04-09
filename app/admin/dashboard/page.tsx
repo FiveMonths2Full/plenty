@@ -28,10 +28,11 @@ export default function AdminDashboard() {
   // Edit bank
   const [ebName, setEbName] = useState('')
 
-  // Set password
-  const [pwBankId,  setPwBankId]  = useState<number | null>(null)
-  const [pwValue,   setPwValue]   = useState('')
-  const [pwSaving,  setPwSaving]  = useState(false)
+  // Set credentials (username + password)
+  const [pwBankId,   setPwBankId]   = useState<number | null>(null)
+  const [pwUsername, setPwUsername] = useState('')
+  const [pwValue,    setPwValue]    = useState('')
+  const [pwSaving,   setPwSaving]   = useState(false)
 
   // Catalog search (add item)
   const [catQuery,       setCatQuery]       = useState('')
@@ -74,7 +75,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetch('/api/admin/session', { cache: 'no-store' })
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then((d: SessionInfo) => setSession(d))
+      .then((d: SessionInfo) => {
+        setSession(d)
+        if (d.role === 'super') {
+          // Ensure admin_username column exists (idempotent migration)
+          fetch('/api/admin/setup', { method: 'POST' }).catch(() => {})
+        }
+      })
       .catch(() => router.replace('/admin'))
   }, [router])
 
@@ -138,19 +145,23 @@ export default function AdminDashboard() {
   }
 
   async function handleSetPassword() {
-    if (!pwBankId || !pwValue.trim()) return
+    if (!pwBankId || (!pwUsername.trim() && !pwValue.trim())) return
     setPwSaving(true)
     try {
+      const body: { username?: string; password?: string } = {}
+      if (pwUsername.trim()) body.username = pwUsername.trim()
+      if (pwValue.trim()) body.password = pwValue.trim()
       const res = await fetch(`/api/banks/${pwBankId}/set-password`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pwValue.trim() }),
+        body: JSON.stringify(body),
       })
       if (res.ok) {
-        showToast('Password set')
-        setPwBankId(null); setPwValue('')
+        showToast('Credentials saved')
+        setPwBankId(null); setPwUsername(''); setPwValue('')
       } else {
-        showToast('Error setting password')
+        const d = await res.json() as { error?: string }
+        showToast(d.error || 'Error saving credentials')
       }
     } finally {
       setPwSaving(false)
@@ -464,26 +475,37 @@ export default function AdminDashboard() {
               {/* Set password row — super only */}
               {isSuper && (
                 pwBankId === activeBank.id ? (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingTop: 8, borderTop: '0.5px solid #eee' }}>
-                    <input
-                      type="password" value={pwValue} onChange={e => setPwValue(e.target.value)}
-                      placeholder="New password for this bank's admin"
-                      autoFocus
-                      onKeyDown={e => e.key === 'Enter' && handleSetPassword()}
-                      style={{ ...fi, flex: 1, minWidth: 200 }}
-                    />
-                    <button onClick={handleSetPassword} disabled={pwSaving} style={btnPrimary}>
-                      {pwSaving ? 'Saving…' : 'Set password'}
-                    </button>
-                    <button onClick={() => { setPwBankId(null); setPwValue('') }} style={btnGhost}>Cancel</button>
+                  <div style={{ paddingTop: 8, borderTop: '0.5px solid #eee', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Set admin credentials</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <input
+                        type="text" value={pwUsername} onChange={e => setPwUsername(e.target.value)}
+                        placeholder="Username"
+                        autoFocus
+                        autoComplete="off"
+                        style={{ ...fi, flex: 1, minWidth: 140 }}
+                      />
+                      <input
+                        type="password" value={pwValue} onChange={e => setPwValue(e.target.value)}
+                        placeholder="Password"
+                        onKeyDown={e => e.key === 'Enter' && handleSetPassword()}
+                        style={{ ...fi, flex: 1, minWidth: 140 }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={handleSetPassword} disabled={pwSaving || (!pwUsername.trim() && !pwValue.trim())} style={btnPrimary}>
+                        {pwSaving ? 'Saving…' : 'Save credentials'}
+                      </button>
+                      <button onClick={() => { setPwBankId(null); setPwUsername(''); setPwValue('') }} style={btnGhost}>Cancel</button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ paddingTop: 8, borderTop: '0.5px solid #eee' }}>
                     <button
-                      onClick={() => { setPwBankId(activeBank.id); setPwValue('') }}
+                      onClick={() => { setPwBankId(activeBank.id); setPwUsername(''); setPwValue('') }}
                       style={{ ...btnGhost, fontSize: 12 }}
                     >
-                      Set bank admin password
+                      Set admin credentials
                     </button>
                   </div>
                 )
