@@ -141,7 +141,7 @@ export default function BankDashboard() {
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' })
-    router.push('/admin')
+    window.location.href = '/admin'
   }
 
   if (!session || !bank) {

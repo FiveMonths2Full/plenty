@@ -119,7 +119,7 @@ export default function AdminDashboard() {
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' })
-    router.push('/admin')
+    window.location.href = '/admin'
   }
 
   function handleAddBank() {
