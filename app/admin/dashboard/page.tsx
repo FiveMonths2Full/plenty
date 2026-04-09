@@ -127,8 +127,8 @@ export default function AdminDashboard() {
   const activeBank = banks.find(b => b.id === activeBankId)
   const isSuper = session?.role === 'super'
 
-  async function handleLogout() {
-    await fetch('/api/admin/logout', { method: 'POST' })
+  function handleLogout() {
+    fetch('/api/admin/logout', { method: 'POST' }).catch(() => {})
     window.location.href = '/admin'
   }
 

@@ -140,8 +140,8 @@ export default function BankDashboard() {
     showToast('Item removed')
   }
 
-  async function handleLogout() {
-    await fetch('/api/admin/logout', { method: 'POST' })
+  function handleLogout() {
+    fetch('/api/admin/logout', { method: 'POST' }).catch(() => {})
     window.location.href = '/admin'
   }
 
