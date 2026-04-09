@@ -59,6 +59,23 @@ export default function Home() {
           >
             Find a food bank →
           </Link>
+          <Link
+            href="/admin"
+            style={{
+              display: 'inline-block',
+              background: '#fff',
+              color: '#27500A',
+              padding: '12px 24px',
+              borderRadius: 10,
+              fontSize: 15,
+              fontWeight: 500,
+              textDecoration: 'none',
+              letterSpacing: '-0.01em',
+              border: '0.5px solid #c8ddb8',
+            }}
+          >
+            Admin sign in
+          </Link>
         </div>
       </section>
 
@@ -105,12 +122,7 @@ export default function Home() {
         padding: '20px 24px',
         display: 'flex', justifyContent: 'center',
       }}>
-        <Link
-          href="/admin"
-          style={{ fontSize: 12, color: '#aaa', textDecoration: 'none' }}
-        >
-          Food bank admin →
-        </Link>
+        <span style={{ fontSize: 12, color: '#ccc' }}>© {new Date().getFullYear()} Plenti</span>
       </footer>
     </main>
   )
